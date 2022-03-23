@@ -66,6 +66,10 @@ lazy val apiFilter: Seq[(File, String)] => Seq[(File, String)] = {
   }
 }
 
+lazy val testingModule = (project in file("playground"))
+  .settings(commonSettings: _*)
+  .dependsOn(api)
+
 lazy val api = (project in file("api"))
   .enablePlugins(VelocityPlugin)
   .settings(

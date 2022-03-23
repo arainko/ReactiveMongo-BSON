@@ -1045,7 +1045,20 @@ private[api] class MacroImpl(val c: Context) {
               if (param.annotations.exists(_.tree.tpe =:= typeOf[NoneAsNull])) {
                 q"${tupleElement(i)}.fold({ ${empty}; () }) { ${vp} => $call }"
               } else {
-                q"${tupleElement(i)}.foreach { ${vp} => $call }"
+                q"""($implicitWriter.writeTry(${tupleElement(
+                    i
+                  )}): ${utilPkg}.Try[${bsonPkg}.BSONValue]) match {
+                  case ${utilPkg}.Success(${bt}) =>
+              ${bufOk} += ${bsonPkg}.BSONElement($field, $bt)
+              ()
+
+            case ${utilPkg}.Failure(${errName}) =>
+              ${bufErr} += ${exceptionsPkg}.HandlerException($pname, $errName)
+              ()
+                }
+                """
+                // q"$call(${tupleElement(i)})"
+                // q"${tupleElement(i)}.foreach { ${vp} => $call }"
               }
             }
           }
